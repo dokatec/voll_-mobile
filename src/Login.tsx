@@ -1,12 +1,60 @@
-import { VStack, Image, Text, Box, FormControl, Input, Button, Link } from 'native-base';
+import { VStack, Image, Text, Box, FormControl, Input, Button, Link, useToast } from 'native-base';
 import { TouchableOpacity } from 'react-native';
 import { Titulo } from './components/Titulo';
 import Logo from './assets/Logo.png';
 import { Botao } from './components/Botao';
 import { EntradaTexto } from './components/EntradaTexto';
+import { useEffect, useState } from 'react';
+import { fazerLogin } from './servicos/AutenticacaoServico';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtDecode } from 'jwt-decode';
 
 
-export default function Login({ navigation }) {
+export default function Login({ navigation }: any) {
+
+    const [email, setEmail] = useState('');
+    const [senha, setSenha] = useState('');
+    const [carregando, setCarregando] = useState(true)
+    const toast = useToast();
+
+    useEffect(() => {
+        // AsyncStorage.removeItem('token')
+        async function verificarLogin() {
+            const token = await AsyncStorage.getItem('token');
+            if (token) {
+                navigation.replace("Tabs")
+            }
+            setCarregando(false)
+        }
+        verificarLogin();
+    }, []);
+
+    async function login() {
+        const resultado = await fazerLogin(email, senha);
+        if (resultado) {
+            const { token } = resultado;
+            AsyncStorage.setItem('token', token);
+
+            const tokenDecodificado = jwtDecode(token) as any;
+
+            const pacienteId = tokenDecodificado.id;
+
+            AsyncStorage.setItem('pacienteId', pacienteId);
+
+            navigation.replace('Tabs')
+        } else {
+            toast.show({
+                title: "Erro no login",
+                description: "O email ou senha não conferem",
+                backgroundColor: "blue.800"
+            })
+        }
+    }
+
+
+    if (carregando) {
+        return null
+    }
 
     return (
         <VStack flex={1} alignItems="center" justifyContent="center" padding={5}>
@@ -15,10 +63,10 @@ export default function Login({ navigation }) {
                 Faça login em sua conta
             </Titulo>
             <Box>
-                <EntradaTexto label='Email' placeholder='Insira seu endereço de e-mail' />
-                <EntradaTexto label='Senha' placeholder='Insira sua senha' />
+                <EntradaTexto label='Email' placeholder='Insira seu endereço de e-mail' value={email} onChangeText={setEmail} />
+                <EntradaTexto label='Senha' placeholder='Insira sua senha' value={senha} onChangeText={setSenha} secureTextEntry />
             </Box>
-            <Botao onPress={() => navigation.navigate('Tabs')}> Entrar </Botao>
+            <Botao onPress={login}> Entrar </Botao>
             <Link href='https://www.alura.com.br' marginTop={2}>Esqueceu sua senha?</Link>
             <Box w="100%" flexDirection="row" justifyContent="center" marginTop={5} >
                 <Text>Ainda não tem cadastro? </Text>
