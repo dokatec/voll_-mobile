@@ -1,4 +1,4 @@
-import { ScrollView, Image, Text, Box, FormControl, Input, Button, Link, Checkbox } from 'native-base';
+import { ScrollView, Image, Text, Box, Checkbox } from 'native-base';
 import { Titulo } from './components/Titulo';
 import Logo from './assets/Logo.png';
 import { Botao } from './components/Botao';
@@ -9,12 +9,16 @@ import { secoes } from './utils/CadastroEntradaTexto';
 export default function Cadastro() {
 
     const [numSecao, setNumSecao] = useState(0);
+    const [dados, setDados] = useState({} as any);
 
 
 
     function avancarSecao() {
         if (numSecao < secoes.length - 1) {
             setNumSecao(numSecao + 1)
+        }
+        else {
+            console.log(dados);
         }
     }
 
@@ -24,6 +28,9 @@ export default function Cadastro() {
         }
     }
 
+    function atualizarDados(id: string, valor: string) {
+        setDados({ ...dados, [id]: valor })
+    }
 
 
     return (
@@ -35,7 +42,15 @@ export default function Cadastro() {
             <Box>
                 {
                     secoes[numSecao]?.entradaTexto?.map(entrada => {
-                        return <EntradaTexto label={entrada.label} placeholder={entrada.placeholder} key={entrada.id} />
+                        return (
+                            <EntradaTexto
+                                label={entrada.label}
+                                placeholder={entrada.placeholder}
+                                key={entrada.id}
+                                secureTextEntry={entrada.secureTextEntry}
+                                value={dados[entrada.name]}
+                                onChangeText={(text) => atualizarDados(entrada.name, text)}
+                            />)
                     })
                 }
             </Box>
